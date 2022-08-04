@@ -1,0 +1,19 @@
+{
+  "name": "mc-auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "build": "npx copyfiles -u 1 ./src/*.html ./dist/ && npx babel -o ./dist/app.js ./src/*.js --presets react-app/prod",
+    "serve": "npm run build && npx copyfiles -u 1 ./dist/**.* ./wwwroot && flask --app ./src/server run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-react-app": "^3.1.2",
+    "copyfiles": "^2.4.1",
+    "react": "^18.2.0"
+  }
+}
