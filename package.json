@@ -1,11 +1,14 @@
 {
-  "name": "mc-auth",
+  "name": "my-webpack-project",
   "version": "1.0.0",
-  "description": "",
+  "description": "My webpack project",
   "main": "app.js",
   "scripts": {
-    "build": "npx copyfiles -u 1 ./src/*.html ./dist/ && npx babel -o ./dist/app.js ./src/*.js --presets react-app/prod",
-    "serve": "npm run build && npx copyfiles -u 1 ./dist/**.* ./wwwroot && flask --app ./src/server run"
+    "build": "webpack --mode=production --node-env=production",
+    "serve": "npx copyfiles -u 1 ./dist/**.* ./wwwroot && flask --app ./src/server run",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +18,20 @@
     "babel-preset-react-app": "^3.1.2",
     "copyfiles": "^2.4.1",
     "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-react": "^7.18.6",
+    "@webpack-cli/generators": "^2.5.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.2.5",
+    "babel-preset-env": "^1.7.0",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
+    "react-dom": "^18.2.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   }
 }
