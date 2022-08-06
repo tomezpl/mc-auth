@@ -1,0 +1,38 @@
+.minecraft-font {
+    font-family: 'Press Start 2P';
+}
+
+.minecraft-body-font, #body > div > h2 {
+    font-family: 'VT323';
+}
+
+#header {
+    background-color: green;
+}
+
+#header-text {
+    text-shadow: 0 0 4px black;
+}
+
+#main {
+    background-color: #7e7e7e;
+}
+
+#body > div > h2 {
+    color: #faf752;
+    font-style: italic;
+    font-weight: light;
+    font-size: 3em;
+    text-shadow: 2px 2px 1px black;
+}
+
+#main-container {
+    background-color: #cecece;
+}
+
+.guide-accordion {
+    --bs-accordion-bg: rgb(231, 231, 231);
+    --bs-accordion-border-color: black;
+    --bs-accordion-active-bg: rgb(239, 255, 233);
+    --bs-accordion-active-color: rgb(10, 61, 0);
+}

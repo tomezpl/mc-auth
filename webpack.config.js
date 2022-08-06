@@ -2,13 +2,21 @@
 
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const {exec} = require('child_process');
 
 const isProduction = process.env.NODE_ENV == 'production';
 
 
 const stylesHandler = 'style-loader';
 
-
+class CopyToWWWRootPlugin { 
+    apply(compiler) {
+        compiler.hooks.afterCompile.tap('Copy to wwwroot', () => {
+            console.log('Copying files to wwwroot.');
+            exec('npx copyfiles -u 1 ./dist/**.* ./wwwroot');
+        });
+    }
+}
 
 const config = {
     entry: './src/app.jsx',
@@ -19,6 +27,7 @@ const config = {
         new HtmlWebpackPlugin({
             template: './src/index.html',
         }),
+        new CopyToWWWRootPlugin()
 
         // Add your plugins here
         // Learn more about plugins from https://webpack.js.org/configuration/plugins/

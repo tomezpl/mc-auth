@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "build": "webpack --mode=production --node-env=production",
-    "serve": "npx copyfiles -u 1 ./dist/**.* ./wwwroot && flask --app ./src/server run",
+    "serve": "flask --app ./src/server run",
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
     "watch": "webpack --watch"
@@ -14,10 +14,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@popperjs/core": "^2.11.5",
     "babel-cli": "^6.26.0",
     "babel-preset-react-app": "^3.1.2",
+    "bootstrap": "^5.2.0",
     "copyfiles": "^2.4.1",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.10",
