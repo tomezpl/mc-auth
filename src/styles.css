@@ -15,19 +15,19 @@
 }
 
 #main {
-    background-color: #7e7e7e;
+    background-color: #acacac;
 }
 
 #body > div > h2 {
-    color: #faf752;
+    color: #fffc32;
     font-style: italic;
     font-weight: light;
-    font-size: 3em;
+    font-size: 3.1em;
     text-shadow: 2px 2px 1px black;
 }
 
 #main-container {
-    background-color: #cecece;
+    background-color: #d8d8d8;
 }
 
 .guide-accordion {
