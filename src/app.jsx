@@ -11,9 +11,11 @@ const root = ReactDOM.createRoot(domContainer);
 root.render(
     <Container className="shadow vh-100" id="main-container">
         <Row id="header">
-            <Col xs={12}>
-                <h1 id="header-text" class="p-2 text-center minecraft-font text-light">DigiHub Whitelister</h1>
+            <Col xs={2} />
+            <Col xs={8}>
+                <h1 id="header-text" class="p-2 text-center minecraft-font text-light">DigiHub Minecraft Whitelister</h1>
             </Col>
+            <Col xs={2} />
         </Row>
         <Row id="body">
             <Col xs={0} md={2} lg={3}></Col>
@@ -39,13 +41,13 @@ root.render(
                             </Accordion.Header>
                             <Accordion.Body>
                                 <p>
-                                    You can do this yourself by assigning the Minecraft role as per the <Badge bg="secondary">
+                                    You can do this yourself by assigning the Minecraft role as per the <Badge className="align-middle" bg="secondary">
                                         <span class="fs-5 fw-light fst-italic"># </span>
                                         <span class="align-text-top">self-roles</span>
                                     </Badge> text channel.
                                 </p>
                                 <p>
-                                    <strong>If you need any help,</strong> feel free to contact the Discord admins or send a message in the <Badge bg="secondary">
+                                    <strong>If you need any help,</strong> feel free to contact the Discord admins or send a message in the <Badge className="align-middle" bg="secondary">
                                         <span class="fs-5 fw-light fst-italic"># </span>
                                         <span class="align-text-top">minecraft</span>
                                     </Badge> text channel.
@@ -77,6 +79,9 @@ root.render(
             <Col xs={1} />
 
             <Col xs={12}>
+                <a href="/signin">
+                    Click here!
+                </a>
             </Col>
         </Row>
         <Row id="footer">

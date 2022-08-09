@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from os import getcwd
 import os.path
 from time import time
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, redirect
 from werkzeug.exceptions import BadRequest
 import requests
 import urllib.parse
@@ -101,3 +101,7 @@ def signinRedirect():
         return response
     else:
         return BadRequest()
+
+@app.route('/signin')
+def signin():
+    return redirect(f'https://discord.com/api/oauth2/authorize?client_id={appsettings["discord"]["clientId"]}&redirect_uri={urllib.parse.quote(appsettings["discord"]["redirectUri"], "")}&response_type=code&scope={urllib.parse.quote(appsettings["discord"]["scope"])}')
