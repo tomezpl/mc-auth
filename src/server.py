@@ -4,11 +4,10 @@ import os.path
 from time import time
 from flask import Flask, request, make_response, redirect
 from werkzeug.exceptions import BadRequest
-import requests
-import urllib.parse
 import json
 from uuid import uuid4
 import copy
+import discord_wrapper
 
 app = Flask(__name__)
 
@@ -29,27 +28,6 @@ appsettings = json.loads(readFile('appsettings.json'))
 def wwwrootRead(fileName):
     return readFile(os.path.join(wwwroot, fileName))
 
-def getDiscordToken(authCode, hostUrl):
-    tokenRequestData = {
-        'client_id': appsettings['discord']['clientId'],
-        'client_secret': appsettings['discord']['clientSecret'],
-        'grant_type': 'authorization_code',
-        'code': authCode,
-        'redirect_uri': f'{hostUrl}redirect'
-    }
-    discordTokenResponse = requests.post('https://discord.com/api/oauth2/token', data=tokenRequestData, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-    return discordTokenResponse.json()
-
-def refreshDiscordToken(refreshToken):
-    tokenRequestData = {
-        'client_id': appsettings['discord']['clientId'],
-        'client_secret': appsettings['discord']['clientSecret'],
-        'grant_type': 'refresh_token',
-        'refresh_token': refreshToken
-    }
-    discordTokenResponse = requests.post('https://discord.com/api/oauth2/token', data=tokenRequestData, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-    return discordTokenResponse.json()
-
 def getUuidForSession(currentRequest):
     if 'WhitelisterUuid' in currentRequest.cookies and currentRequest.cookies['WhitelisterUuid']:
         return currentRequest.cookies['WhitelisterUuid']
@@ -63,7 +41,7 @@ def getTokenForUuid(sessionUuid):
         if expiryDate <= datetime.utcnow() - timedelta(seconds=60):
             if expiryDate <= datetime.utcnow() - timedelta(seconds=15):
                 return None
-            refreshedToken = refreshDiscordToken(token['refresh_token'])
+            refreshedToken = discord_wrapper.refreshToken(token['refresh_token'], appsettings['discord']['clientId'], appsettings['discord']['clientSecret'])
             if refreshedToken:
                 refreshedToken['created'] = datetime.utcnow()
                 userTokens[sessionUuid] = copy.copy(refreshedToken)
@@ -80,6 +58,17 @@ def myToken():
     else:
         return {}
 
+@app.route('/userinfo')
+def getUserInfo():
+    sessionId = getUuidForSession(request)
+    userToken = getTokenForUuid(sessionId)
+    if userToken:
+        discordUserInfo = discord_wrapper.getUserInfo(userToken['access_token'])
+        print(discordUserInfo)
+        return {'userName': f'{discordUserInfo["username"]}#{discordUserInfo["discriminator"]}'}
+    else:
+        return {}
+
 @app.route('/')
 def home():
     return wwwrootRead('index.html')
@@ -92,8 +81,8 @@ def js():
 def signinRedirect():
     # Check that the request contains a valid OAuth2 code.
     if 'code' in request.args and request.args['code']:
-        token = getDiscordToken(request.args['code'], request.host_url)
-        response = make_response(token)
+        token = discord_wrapper.getToken(request.args['code'], request.host_url, appsettings['discord']['clientId'], appsettings['discord']['clientSecret'])
+        response = redirect('/')
         sessionUuid = getUuidForSession(request)
         userTokens[sessionUuid] = copy.copy(token)
         userTokens[sessionUuid]['created'] = datetime.utcnow()
@@ -104,4 +93,4 @@ def signinRedirect():
 
 @app.route('/signin')
 def signin():
-    return redirect(f'https://discord.com/api/oauth2/authorize?client_id={appsettings["discord"]["clientId"]}&redirect_uri={urllib.parse.quote(appsettings["discord"]["redirectUri"], "")}&response_type=code&scope={urllib.parse.quote(appsettings["discord"]["scope"])}')
+    return redirect(discord_wrapper.getSigninUrl(appsettings['discord']['clientId'], appsettings['discord']['redirectUri'], appsettings['discord']['scope']))
