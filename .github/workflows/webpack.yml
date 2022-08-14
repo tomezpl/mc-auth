@@ -25,6 +25,9 @@ jobs:
       run: |
         npm install
         npm run build
+    - name: Package
+      run: |
+        tar -czf mc-auth-${{github.ref_name}}.tar.gz wwwroot/ src/*.py
     - name: Create release
       id: create_release
       uses: ncipollo/release-action@v1.10.0
@@ -32,3 +35,4 @@ jobs:
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: "mc-auth-${{github.ref_name}}.tar.gz"
