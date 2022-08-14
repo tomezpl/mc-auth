@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from os import getcwd
 import os.path
-from time import time
 from flask import Flask, request, make_response, redirect, Response
 from werkzeug.exceptions import BadRequest, Unauthorized
 import json
 from uuid import uuid4
 import copy
 import discord_wrapper
+from rcon.source import Client as RconClient
 
 app = Flask(__name__)
 
@@ -46,6 +46,23 @@ def syncMinecraftNameMap():
     global minecraftNameMap
     mcNameMapPath = './mc_name_map.json'
     writeFile(mcNameMapPath, json.dumps(minecraftNameMap), not os.path.exists(mcNameMapPath))
+
+def reloadMinecraftWhitelist():
+    global minecraftNameMap
+
+    currentWhitelist = json.loads(readFile(appsettings['minecraft']['whitelistPath']))
+    namesToRemove = []
+    for entry in currentWhitelist:
+        if 'name' in entry:
+            namesToRemove.append(entry['name'])
+            
+    with RconClient(appsettings['minecraft']['serverIp'], int(appsettings['minecraft']['serverPort']), passwd=appsettings['minecraft']['password']) as client:
+        # Clear old players from the whitelist.
+        for name in namesToRemove:
+            client.run('whitelist remove', name)
+        # Add players from the name map.
+        for name in minecraftNameMap.values():
+            client.run('whitelist add', name)
 
 loadMinecraftNameMap()
 
