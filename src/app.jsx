@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Container, Row, Col, Accordion, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Accordion, Badge, Form, FormControl, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 
@@ -11,24 +11,118 @@ const root = ReactDOM.createRoot(domContainer);
 function getUserInfo() {
     return new Promise((resolve, reject) => {
         fetch('/userinfo', { method: 'GET' })
-        .then((response) => {
-            response.json().then((data) => {
-                if (data != null && data != undefined && Object.keys(data) !== 0) {
-                    resolve({
-                        userName: data.userName
-                    });
-                }
-                else {
-                    resolve({
-                        userName: null
-                    });
-                }
+            .then((response) => {
+                response.json().then((data) => {
+                    if (data != null && data != undefined && Object.keys(data) !== 0) {
+                        resolve({
+                            userName: data.userName
+                        });
+                    }
+                    else {
+                        resolve({
+                            userName: null
+                        });
+                    }
+                });
+            })
+            .catch((reason) => {
+                reject(reason);
             });
-        })
-        .catch((reason) => {
-            reject(reason);
-        });
     });
+}
+
+function getUserGameConfig() {
+    return new Promise((resolve, reject) => {
+        fetch('/gameconfig', { method: 'GET' })
+            .then((response) => {
+                response.json().then((data) => {
+                    if (data != null && data != undefined && Object.keys(data) !== 0) {
+                        resolve({
+                            minecraftPlayerName: data.minecraftPlayerName
+                        });
+                    }
+                    else {
+                        resolve({
+                            minecraftPlayerName: null
+                        });
+                    }
+                })
+            })
+            .catch((reason) => {
+                reject(reason);
+            });
+    });
+}
+
+class UpdateNameForm extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            playerName: props.playerName,
+            showModal: false,
+            isUpdating: false
+        };
+    }
+
+    handleChange = e => {
+        this.setState({ [e.target.name]: e.target.value });
+    };
+
+    submitChange = () => {
+        this.setState({showModal: true, isUpdating: true});
+        fetch('/gameconfig', {method: 'PUT', body: JSON.stringify({minecraftPlayerName: this.state.playerName}), headers: {'Content-Type': 'application/json'}})
+        .then((response) => {
+            if(![200, 201].includes(response.status)) {
+                throw 'Failed to update whitelist.';
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            this.setState({playerName: this.props.playerName});
+        })
+        .finally(() => {
+            this.setState({isUpdating: false});
+        });
+    }
+
+    render() {
+        let modalHeader;
+        let modalBodyText;
+        let modalButtons;
+
+        if(this.state.isUpdating) {
+            modalHeader = 'Please wait...';
+            modalBodyText = 'Your name is currently being added to the whitelist.';
+        }
+        else {
+            modalHeader = 'Name updated!';
+            modalBodyText = 'Your name has been successfully added to the whitelist. You should now be able to connect to the server.';
+            modalButtons = (<Button variant="success" onClick={() => this.setState({showModal: false})}>Close</Button>);
+        }
+
+        return (<>
+            <Form>
+                <Form.Group>
+                    <Form.Label>Minecraft player name</Form.Label>
+                    <FormControl name="playerName" onChange={this.handleChange} defaultValue={this.props.playerName} />
+                    <Button variant="primary" onClick={this.submitChange}>Update</Button>
+                </Form.Group>
+            </Form>
+            <Modal show={this.state.showModal}>
+
+                <Modal.Header>
+                    {modalHeader}
+                </Modal.Header>
+                <Modal.Body>
+                    {modalBodyText}
+                </Modal.Body>
+                <Modal.Footer>
+                    {modalButtons}
+                </Modal.Footer>
+            </Modal>
+        </>);
+    }
 }
 
 class MinecraftWhitelisterComponent extends React.Component {
@@ -37,30 +131,48 @@ class MinecraftWhitelisterComponent extends React.Component {
         this.state = {
             userInfo: {
                 userName: null
+            },
+            gameConfig: {
+                minecraftPlayerName: null
             }
         };
     }
 
     componentDidMount() {
         getUserInfo()
-        .then((userInfo) => {
-            this.setState({userInfo});
-        })
-        .catch(() => {
-            console.error('Failed to get user info.');
-            this.setState({
-                userInfo: {
-                    userName: null
-                }
+            .then((userInfo) => {
+                this.setState({ userInfo });
+            })
+            .catch(() => {
+                console.error('Failed to get user info.');
+                this.setState({
+                    userInfo: {
+                        userName: null
+                    }
+                });
             });
-        });
+
+        getUserGameConfig()
+            .then((gameConfig) => {
+                this.setState({ gameConfig });
+            })
+            .catch(() => {
+                console.error('Failed to get game config for user.')
+                this.setState({
+                    gameConfig: {
+                        minecraftPlayerName: null
+                    }
+                });
+            });
     }
 
     render() {
-        let userInfoText; 
+        let userInfoText;
         let signInButton;
-        if(this.state.userInfo.userName != null) {
+        let updateNameForm;
+        if (this.state.userInfo.userName != null) {
             userInfoText = <p>Hi {this.state.userInfo.userName}!</p>;
+            updateNameForm = <UpdateNameForm playerName={this.state.gameConfig.minecraftPlayerName} />
         }
         else {
             signInButton = <a href="/signin">Click here!</a>
@@ -138,6 +250,7 @@ class MinecraftWhitelisterComponent extends React.Component {
                 <Col xs={12}>
                     {userInfoText}
                     {signInButton}
+                    {updateNameForm}
                 </Col>
             </Row>
             <Row id="footer">

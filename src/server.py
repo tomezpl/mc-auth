@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from os import getcwd
 import os.path
 from time import time
-from flask import Flask, request, make_response, redirect
-from werkzeug.exceptions import BadRequest
+from flask import Flask, request, make_response, redirect, Response
+from werkzeug.exceptions import BadRequest, Unauthorized
 import json
 from uuid import uuid4
 import copy
@@ -22,7 +22,32 @@ def readFile(filePath):
     file.close()
     return fileContents
 
+def writeFile(filePath, fileContents, newFile=False):
+    file = open(filePath, 'x' if newFile else 'w')
+    file.write(fileContents)
+    file.close()
+
 appsettings = json.loads(readFile('appsettings.json'))
+
+# A dict that will store people's Minecraft player names where the key is their Discord ID snowflake.
+minecraftNameMap = {}
+
+# Loads the Minecraft player name map from the JSON file or creates one if needed.
+def loadMinecraftNameMap():
+    global minecraftNameMap
+    mcNameMapPath = './mc_name_map.json'
+    if os.path.exists(mcNameMapPath):
+        minecraftNameMap = json.loads(readFile(mcNameMapPath))
+    else:
+        writeFile(mcNameMapPath, json.dumps({}), True)
+        minecraftNameMap = {}
+
+def syncMinecraftNameMap():
+    global minecraftNameMap
+    mcNameMapPath = './mc_name_map.json'
+    writeFile(mcNameMapPath, json.dumps(minecraftNameMap), not os.path.exists(mcNameMapPath))
+
+loadMinecraftNameMap()
 
 # Returns a string read from the specified file inside wwwroot.
 def wwwrootRead(fileName):
@@ -50,6 +75,16 @@ def getTokenForUuid(sessionUuid):
     else:
         return None
 
+def getConfigForDiscordId(discordId):
+    if discordId in minecraftNameMap:
+        return {'minecraftPlayerName': minecraftNameMap[discordId]}
+    else:
+        return {}
+
+def updateConfigForDiscordId(discordId, mcPlayerName):
+    minecraftNameMap[discordId] = mcPlayerName
+    syncMinecraftNameMap()
+
 @app.route('/mytoken')
 def myToken():
     sessionToken = getTokenForUuid(request.cookies['WhitelisterUuid'])
@@ -68,6 +103,49 @@ def getUserInfo():
         return {'userName': f'{discordUserInfo["username"]}#{discordUserInfo["discriminator"]}'}
     else:
         return {}
+
+@app.route('/gameconfig', methods=['GET'])
+def getUserMcConfig():
+    sessionUuid = getUuidForSession(request)
+    discordToken = getTokenForUuid(sessionUuid)
+    print(minecraftNameMap)
+    if discordToken:
+        userInfo = discord_wrapper.getUserInfo(discordToken['access_token'])
+        if userInfo and 'id' in userInfo:
+            return getConfigForDiscordId(userInfo['id'])
+        else:
+            return BadRequest('Could not get Discord user data.')
+    else:
+        return Unauthorized('Invalid or missing Discord OAuth2 access token.')
+
+@app.route('/gameconfig', methods=['PUT'])
+def updateUserMcConfig():
+    print('helllooooooo')
+    discordId = None
+    discordToken = getTokenForUuid(getUuidForSession(request))
+    print('helllooooooo2')
+    if discordToken and 'access_token' in discordToken:
+        userInfo = discord_wrapper.getUserInfo(discordToken['access_token'])
+        if userInfo and 'id' in userInfo:
+            discordId = userInfo['id']
+        else:
+            return BadRequest('Could not get Discord user data.')
+    else:
+        return Unauthorized('Invalid or missing Discord OAuth2 access token.')
+    print('helllooooooo3')
+
+    newConfig = request.get_json()
+    print(newConfig)
+    if newConfig and 'minecraftPlayerName' in newConfig:
+        wasJustCreated = not discordId in minecraftNameMap
+        print(f'wasJustCreated: {wasJustCreated}')
+        minecraftNameMap[discordId] = newConfig['minecraftPlayerName']
+        print(f'Updated name map for DiscordUser {discordId} to allow player {newConfig["minecraftPlayerName"]}')
+        syncMinecraftNameMap()
+        print('Written to file')
+        return Response(status=201 if wasJustCreated else 200)
+    else:
+        return BadRequest('Invalid game configuration update data.')
 
 @app.route('/')
 def home():
