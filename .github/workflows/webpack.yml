@@ -27,7 +27,9 @@ jobs:
         npm run build
     - name: Package
       run: |
-        tar -czf mc-auth-${{github.ref_name}}.tar.gz wwwroot/ src/*.py
+        cp src/*.py ./
+        tar -czf mc-auth-${{github.ref_name}}.tar.gz wwwroot/ ./*.py
+        rm ./*.py
     - name: Create release
       id: create_release
       uses: ncipollo/release-action@v1.10.0
