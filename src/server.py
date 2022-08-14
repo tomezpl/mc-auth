@@ -50,6 +50,7 @@ def syncMinecraftNameMap():
     global minecraftNameMap
     mcNameMapPath = './mc_name_map.json'
     writeFile(mcNameMapPath, json.dumps(minecraftNameMap), not os.path.exists(mcNameMapPath))
+    reloadMinecraftWhitelist()
 
 def reloadMinecraftWhitelist():
     global minecraftNameMap
