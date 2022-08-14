@@ -1,7 +1,7 @@
 {
-  "name": "my-webpack-project",
+  "name": "digihub-mc-auth",
   "version": "1.0.0",
-  "description": "My webpack project",
+  "description": "DigiHub Minecraft Whitelister",
   "main": "app.js",
   "scripts": {
     "build": "webpack --mode=production --node-env=production",
