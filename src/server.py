@@ -61,7 +61,7 @@ def reloadMinecraftWhitelist():
         if 'name' in entry:
             namesToRemove.append(entry['name'])
             
-    with RconClient(appsettings['minecraft']['serverIp'], int(appsettings['minecraft']['serverPort']), passwd=appsettings['minecraft']['password']) as client:
+    with RconClient(appsettings['minecraft']['serverIp'], int(appsettings['minecraft']['rconPort']), passwd=appsettings['minecraft']['password']) as client:
         # Clear old players from the whitelist.
         for name in namesToRemove:
             if name not in minecraftNameMap.values():
