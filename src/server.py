@@ -8,8 +8,12 @@ from uuid import uuid4
 import copy
 import discord_wrapper
 from rcon.source import Client as RconClient
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+
+# X-Forwarded-For Proxy Fix to run in WSGI servers.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 wwwroot = os.path.join(getcwd(), 'wwwroot')
 
