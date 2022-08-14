@@ -30,13 +30,8 @@ jobs:
         npm run build
     - name: Create release
       id: create_release
-      uses: actions/create_release@v1
-      env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1.10.0
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          WIP
         draft: false
         prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
