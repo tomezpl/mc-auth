@@ -56,16 +56,24 @@ def reloadMinecraftWhitelist():
     global minecraftNameMap
 
     currentWhitelist = json.loads(readFile(appsettings['minecraft']['whitelistPath']))
+    currentOps = json.loads(readFile(appsettings['minecraft']['opsPath']))
+
     namesToRemove = []
     for entry in currentWhitelist:
         if 'name' in entry:
             namesToRemove.append(entry['name'])
+    
+    for entry in currentOps:
+        if 'name' in entry:
+            if entry['name'] not in namesToRemove:
+                namesToRemove.append(entry['name'])
             
     with RconClient(appsettings['minecraft']['serverIp'], int(appsettings['minecraft']['rconPort']), passwd=appsettings['minecraft']['password']) as client:
         # Clear old players from the whitelist.
         for name in namesToRemove:
             if name not in minecraftNameMap.values():
                 client.run('whitelist remove', name)
+                client.run('deop', name)
         # Add players from the name map.
         for name in minecraftNameMap.values():
             client.run('whitelist add', name)
@@ -123,9 +131,13 @@ def getUserInfo():
     if userToken:
         discordUserInfo = discord_wrapper.getUserInfo(userToken['access_token'])
         print(discordUserInfo)
-        return {'userName': f'{discordUserInfo["username"]}#{discordUserInfo["discriminator"]}'}
+        discordUserRoles = discord_wrapper.getUserRoles(userToken['access_token'], appsettings['discord']['guildId'])
+        if appsettings['discord']['requiredRole'] in discordUserRoles:
+            return {'userName': f'{discordUserInfo["username"]}#{discordUserInfo["discriminator"]}'}
+        else:
+            return Unauthorized('Missing Minecraft role on the Discord server.')
     else:
-        return {}
+        return Unauthorized('Missing Discord OAuth2 token.')
 
 @app.route('/gameconfig', methods=['GET'])
 def getUserMcConfig():

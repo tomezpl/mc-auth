@@ -33,3 +33,7 @@ def getSigninUrl(clientId, redirectUri, scope):
 # Calls the /users/@me endpoint using the provided access token. Returns the response JSON.
 def getUserInfo(accessToken):
     return requests.get(f'{baseDiscordUrl}/users/@me', headers={'Authorization': f'Bearer {accessToken}'}).json()
+
+def getUserRoles(accessToken, guildId):
+    guildMember = requests.get(f'{baseDiscordUrl}/users/@me/guilds/{guildId}/member', headers={'Authorization': f'Bearer {accessToken}'}).json()
+    return guildMember['roles']
